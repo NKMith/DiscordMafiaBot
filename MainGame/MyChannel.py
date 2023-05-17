@@ -25,13 +25,23 @@ class MyChannel:
 
     def setPlayersIDArray(self, playersIDArray):
         self.playersIDArray = playersIDArray
+    
+    def setMafiaChannel(self, mafiaChannel :discord.TextChannel):
+        self.mafiaChannel = mafiaChannel
 
     def saveInfo(self):
         # Channel ID | PlayersArray: []; array of IDs of players | phase
         if self.inDB:
-            mySQLTables.channelTable.updateTableWhere("phase", self.phase, "channelID", self.id)
+            if self.mafiaChannel == None:
+                mySQLTables.channelTable.updateTableWhere("phase", self.phase, "channelID", self.id)
+            else:
+                mySQLTables.channelTable.updateTableWhere("phase", self.phase, "channelID", self.id)
+                mySQLTables.channelTable.updateTableWhere("mafiaChannelID", self.mafiaChannel.id, "channelID", self.id)
         else:
-            mySQLTables.channelTable.insertIntoTable(self.id, json.dumps(self.playersIDArray), self.phase)
+            if self.mafiaChannel == None:
+                mySQLTables.channelTable.insertIntoTable(self.id, json.dumps(self.playersIDArray), self.phase, "NULL")
+            else:
+                mySQLTables.channelTable.insertIntoTable(self.id, json.dumps(self.playersIDArray), self.phase, self.mafiaChannel.id)
 
     def incrementPhase(self):
         self.phase += 1

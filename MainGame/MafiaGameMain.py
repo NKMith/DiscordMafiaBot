@@ -48,6 +48,7 @@ class MafiaGame():
 
         mafiaChannel = await guild.create_text_channel("MafiaRoom", overwrites=overwrites)
         await mafiaChannel.send(f"Welcome to the game, Mafias. This is the secret channel for mafias of the mafia game in server {guild.name}")
+        self.myChannel.setMafiaChannel(mafiaChannel)
 
 
     async def killPlayerWithMostVotesAndAnnounce(self): #TODO - players have same votes
