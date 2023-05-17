@@ -22,6 +22,9 @@ class Player():
             self.role = None
             self.vote = 0
 
+    def isMafia(self):
+        return self.role == "Mafia"
+
     def getRandomRole(self, roleGiver :RoleGiver):
         self.role = roleGiver.giveRandomRole()
     

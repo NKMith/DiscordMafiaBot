@@ -8,6 +8,7 @@ import json
 class MyChannel:
     def __init__(self, channelOrID):
         self.mafiaChannel = None
+        self.mafiaChannelID = None
         if type(channelOrID) == discord.TextChannel:
             self.id = channelOrID.id
         else:
@@ -28,6 +29,7 @@ class MyChannel:
     
     def setMafiaChannel(self, mafiaChannel :discord.TextChannel):
         self.mafiaChannel = mafiaChannel
+        self.mafiaChannelID = self.mafiaChannel.id
 
     def saveInfo(self):
         # Channel ID | PlayersArray: []; array of IDs of players | phase
@@ -41,7 +43,7 @@ class MyChannel:
             if self.mafiaChannel == None:
                 mySQLTables.channelTable.insertIntoTable(self.id, json.dumps(self.playersIDArray), self.phase, "NULL")
             else:
-                mySQLTables.channelTable.insertIntoTable(self.id, json.dumps(self.playersIDArray), self.phase, self.mafiaChannel.id)
+                mySQLTables.channelTable.insertIntoTable(self.id, json.dumps(self.playersIDArray), self.phase, self.mafiaChannelID)
 
     def incrementPhase(self):
         self.phase += 1

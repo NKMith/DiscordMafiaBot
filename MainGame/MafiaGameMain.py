@@ -21,6 +21,7 @@ class MafiaGame():
 
 
     def setUpPlayersList(self):
+        """PRE: self.myChannel has playersIDArray set up"""
         self.playersList = []
         playerIDList = self.myChannel.playersIDArray
         for id in playerIDList:
@@ -64,25 +65,30 @@ class MafiaGame():
         self.playersList.remove(playerToKill)
         playerToKill.removeDataFromDB()
         
+        
+        await self.killPlayer(playerToKill)
+        
+
+    async def killPlayer(self, playerToKill :Player):
         userToMute = discord.utils.get(self.discordTextChannel.members, id=playerToKill.id)
-
-        await self.muteMember(userToMute) # MUTE == Kill
+        self.muteMemberInChannel(userToMute, self.discordTextChannel)
+        if playerToKill.isMafia():
+            self.muteMemberInChannel(userToMute, self.myChannel.mafiaChannel)
         await self.discordTextChannel.send(f"{userToMute.display_name} has been killed!")
+        
 
-
-    async def muteMember(self, userToMute :discord.member.Member):
+    async def muteMemberInChannel(self, userToMute :discord.member.Member, channelToMute):
         """
         Prevent member from being able to chat in the channel
         """
         overwrite = discord.PermissionOverwrite()
         overwrite.send_messages = False
-        await self.discordTextChannel.set_permissions(userToMute, overwrite=overwrite)
-        # TODO - if a Mafia dies, he can't talk in the Mafia Room either
-        #print(f"KILLING PLAYER {player.id}")
+        await channelToMute.set_permissions(userToMute, overwrite=overwrite)
+
 
     def prepForNextRound(self):
         """Increment phase and reset votes"""
-        self.myChannel.phase += 1
+        self.myChannel.incrementPhase()
         self.resetVotes()
         
     def resetVotes(self):
