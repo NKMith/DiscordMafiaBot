@@ -57,7 +57,7 @@ Set up and start the Mafia game
 """
 @bot.command(name="start")
 async def startGame(ctx :discord.ext.commands.Context, *players_displayNames):
-    game = MafiaGame_SetUp.MafiaGame_SetUp(ctx.channel, players_displayNames)
+    game = MafiaGame_SetUp.MafiaGame_SetUp(ctx.channel, players_displayNames) #TODO - Combine MafiaGame and MafiaGame_SetUp
     game.giveAllPlayerRoles()
     game.save()
     game.printAllPlayers()
@@ -77,7 +77,9 @@ async def nextRound(ctx :discord.ext.commands.Context):
     if game.isInitialRound():
         await game.createMafiaChannel()
     else:
-        game.killPlayerWithMostVotes()
+        game.killPlayerWithMostVotesAndAnnounce()
+        game.prepForNextRound()
+        game.save()
 
 @bot.command(name="vote")
 async def voteWhoToKill(ctx :discord.ext.commands.Context, voteeDisplayName):
