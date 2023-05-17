@@ -49,6 +49,7 @@ class MafiaGame_SetUp:
         print("Gave every player a role")
 
     def save(self):
+        """Save all players and save channel"""
         self.saveAllPlayers()
         self.myChannel.saveInfo()
 

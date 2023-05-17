@@ -50,7 +50,7 @@ class MafiaGame():
         await mafiaChannel.send(f"Welcome to the game, Mafias. This is the secret channel for mafias of the mafia game in server {guild.name}")
 
 
-    async def killPlayerWithMostVotes(self): #TODO - players have same votes
+    async def killPlayerWithMostVotesAndAnnounce(self): #TODO - players have same votes
         """
         PRE: playersList and MyChannel are set up
         Find and kill the player with most votes
@@ -62,20 +62,41 @@ class MafiaGame():
 
         self.playersList.remove(playerToKill)
         playerToKill.removeDataFromDB()
-        await self.killPlayer(playerToKill)
+        
+        userToMute = discord.utils.get(self.discordTextChannel.members, id=playerToKill.id)
+
+        await self.muteMember(userToMute) # MUTE == Kill
+        await self.discordTextChannel.send(f"{userToMute.display_name} has been killed!")
 
 
-    async def killPlayer(self, player :Player):
+    async def muteMember(self, userToMute :discord.member.Member):
         """
-        Prevent player from being able to chat in the channel
+        Prevent member from being able to chat in the channel
         """
-        userToMute = discord.utils.get(self.discordTextChannel.members, id=player.id)
         overwrite = discord.PermissionOverwrite()
         overwrite.send_messages = False
         await self.discordTextChannel.set_permissions(userToMute, overwrite=overwrite)
         # TODO - if a Mafia dies, he can't talk in the Mafia Room either
-        print(f"KILLING PLAYER {player.id}")
+        #print(f"KILLING PLAYER {player.id}")
 
-    def moveOntoNextRound(self):
+    def prepForNextRound(self):
+        """Increment phase and reset votes"""
         self.myChannel.phase += 1
+        self.resetVotes()
+        
+    def resetVotes(self):
+        for player in self.playersList:
+            player.vote = 0
 
+    def save(self):
+        self.saveAllPlayers()
+        self.myChannel.saveInfo()
+    
+    def saveAllPlayers(self):
+        for player in self.playersList:
+            player.saveInfo()
+        print("Saved every player")
+
+    def printAllPlayers(self):
+        for player in self.playersList:
+            print(player.id)
