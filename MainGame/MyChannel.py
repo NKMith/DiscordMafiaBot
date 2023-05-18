@@ -41,10 +41,13 @@ class MyChannel:
                 mySQLTables.channelTable.updateTableWhere("mafiaChannelID", self.mafiaChannel.id, "channelID", self.id)
         else:
             if self.mafiaChannel == None:
-                mySQLTables.channelTable.insertIntoTable(self.id, json.dumps(self.playersIDArray), self.phase, "NULL")
+                mySQLTables.channelTable.insertIntoTable(self.id, json.dumps(self.playersIDArray), self.phase, 0)
             else:
                 mySQLTables.channelTable.insertIntoTable(self.id, json.dumps(self.playersIDArray), self.phase, self.mafiaChannelID)
 
     def incrementPhase(self):
         self.phase += 1
         #mySQLTables.channelTable.updateTableWhere("phase", self.phase, "channelID", self.id)
+
+    def isMafiaPhase(self):
+        return self.phase % 2 == 0

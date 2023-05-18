@@ -48,20 +48,6 @@ class MafiaGame_SetUp(MafiaGame):
             player.getRandomRole(self.roleGiver)
         print("Gave every player a role")
 
-    def save(self):
-        """Save all players and save channel"""
-        self.saveAllPlayers()
-        self.myChannel.saveInfo()
-
-    def saveAllPlayers(self):
-        for player in self.playersList:
-            player.saveInfo()
-        print("Saved every player")
-
-    def printAllPlayers(self):
-        for player in self.playersList:
-            print(player.id)
-
     async def notifyAllPlayersAboutRole(self):
         for player in self.playersList:
             await player.notifyPlayerOfRole()

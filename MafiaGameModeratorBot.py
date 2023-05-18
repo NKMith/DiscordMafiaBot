@@ -5,10 +5,9 @@ Discord Mafia Bot v.0.1: A game running on Discord
 """
 import MainGame.MafiaGame_SetUp as MafiaGame_SetUp
 import discord
-import random
 import MainGame.MafiaGameMain as MafiaGameMain
 from env import *
-from MainGame.Player import Player
+import MainGame.Validator as Validator
 
 from discord.ext import commands #import discord
 from dotenv import load_dotenv
@@ -57,7 +56,14 @@ Set up and start the Mafia game
 """
 @bot.command(name="start")
 async def startGame(ctx :discord.ext.commands.Context, *players_displayNames):
-    game = MafiaGame_SetUp.MafiaGame_SetUp(ctx.channel, players_displayNames) #TODO - Combine MafiaGame and MafiaGame_SetUp
+    # Game starts with phase 0, where Mafias get to vote who to kill
+    # TODO - MyChannel with same ID shouldn't be existing when this command is called
+
+    if Validator.isChannelInDB(ctx.channel):
+        ctx.channel.send("You already have a game ongoing in this channel!")
+        return
+    
+    game = MafiaGame_SetUp.MafiaGame_SetUp(ctx.channel, players_displayNames)
     game.giveAllPlayerRoles()
     game.save()
     game.printAllPlayers()
@@ -65,9 +71,11 @@ async def startGame(ctx :discord.ext.commands.Context, *players_displayNames):
 
 @bot.command(name="next")
 async def nextRound(ctx :discord.ext.commands.Context):
-    # TODO - !next should be invoked from the Mafia channel or the main game channel
-    # TODO - kill the player with most votes
-    # TODO - !Reset all vote counts
+    # TODO - Finish game
+
+    if not Validator.isChannelInDB(ctx.channel) and not Validator.isMafiaChannelInDB(ctx.channel):
+        ctx.channel.send("Invalid channel for 'next' command")
+        return
 
     # recreate mafia game object and read info from DB using channel ID as key
     # create a separate channel in the server for mafias, only allow mafias in it
@@ -77,17 +85,29 @@ async def nextRound(ctx :discord.ext.commands.Context):
     if game.isInitialRound():
         await game.createMafiaChannel()
     else:
-        game.killPlayerWithMostVotesAndAnnounce()
+        await game.killPlayerWithMostVotesAndAnnounce()
         game.prepForNextRound()
         game.save()
 
 @bot.command(name="vote")
 async def voteWhoToKill(ctx :discord.ext.commands.Context, voteeDisplayName):
-    # TODO - votes have to be from the Mafia channel or the main game channel
-    # TODO - Each person should get 1 vote each phase
-    voteeMember = discord.utils.get(ctx.guild.members, display_name=voteeDisplayName)
-    voteePlayer = Player(voteeMember)
-    voteePlayer.getVoted()
+    # TODO - Innocents shouldn't be able to vote when it's the wrong phase
+
+    channelIsAMafiaChannel = Validator.isMafiaChannelInDB(ctx.channel)
+    if not Validator.isChannelInDB(ctx.channel) and channelIsAMafiaChannel:
+        ctx.channel.send("Invalid channel for 'vote' command")
+        return
+    
+    if channelIsAMafiaChannel:
+        mainChannel = Validator.getLinkedMainChannelWithMafiaChannel(ctx.channel)
+        game = MafiaGameMain.MafiaGame(mainChannel)
+    else:
+        game = MafiaGameMain.MafiaGame(ctx.channel)
+
+    game.votePlayerIfValid(ctx.author, voteeDisplayName)
+    game.save() #TODO - maybe just save the related players instead of saving the whole game?
+
+    pass
     
 
 

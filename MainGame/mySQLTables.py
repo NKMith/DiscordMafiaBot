@@ -12,8 +12,9 @@ channelTable.createTable()
 
 
 playersTable = Table.Table("ActivePlayers")
-"""player ID | role | voteCount """
+"""player ID | role | voteCount | hasVoted """
 playersTable.addField("playerID", "bigint unsigned PRIMARY KEY NOT NULL")
 playersTable.addField("role", "ENUM('Innocent', 'Mafia')")
 playersTable.addField("voteCount", "smallint unsigned")
+playersTable.addField("hasVoted", "boolean")
 playersTable.createTable()
