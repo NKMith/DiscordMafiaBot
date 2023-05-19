@@ -6,7 +6,7 @@ from MainGame.RoleGiver import RoleGiver
 class Player():
     
     def __init__(self, memberOrID):
-        self.alreadyVoted = False
+        
         if type(memberOrID) == discord.member.Member:
             self.user = memberOrID
             self.id = memberOrID.id
@@ -14,11 +14,15 @@ class Player():
             self.id = memberOrID
 
         self.inDB = False
+        self.alreadyVoted = False
+        self.isKilled = False
         queryRes = mySQLTables.playersTable.selectFromTableWhere("*", "playerID", self.id)
         if queryRes != []:
             self.inDB = True
             self.role = queryRes[0][1]
             self.voteCount = queryRes[0][2]
+            self.alreadyVoted = queryRes[0][3]
+            self.isKilled = queryRes[0][4]
         else:
             self.role = None
             self.voteCount = 0
@@ -31,10 +35,21 @@ class Player():
 
     def getRandomRole(self, roleGiver :RoleGiver):
         self.role = roleGiver.giveRandomRole()
+
+    def beKilled(self):
+        self.isKilled = True
+
+    def isAlive(self):
+        return not self.isKilled
+    
+    def hasAlreadyVoted(self):
+        return self.alreadyVoted
     
     # Bug: player in two different games
+    # TODO - cant send messages to some players
     async def notifyPlayerOfRole(self):
         await self.user.create_dm()
+        print(f"SENDING MESSAGE TO {self.user.display_name}")
         await self.user.dm_channel.send(f"Your role is: {self.role}")
 
     def incrementVoteCount(self):
@@ -52,10 +67,12 @@ class Player():
         print("save player information: " + str(self.id))
         # TODO - Try read info from table; if null, then insert; else, update
         if self.inDB:
+            print("PLAYER: UPDATING TABLE")
             mySQLTables.playersTable.updateTableWhere("voteCount", self.voteCount, "playerID", self.id)
             mySQLTables.playersTable.updateTableWhere("hasVoted", self.alreadyVoted, "playerID", self.id)
+            mySQLTables.playersTable.updateTableWhere("isKilled", self.isKilled, "playerID", self.id)
         else:
-            mySQLTables.playersTable.insertIntoTable(self.id, self.role, self.voteCount, self.alreadyVoted)
+            mySQLTables.playersTable.insertIntoTable(self.id, self.role, self.voteCount, self.alreadyVoted, self.isKilled)
     
     def setAlreadyVoted(self):
         self.alreadyVoted = True

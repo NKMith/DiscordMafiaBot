@@ -9,7 +9,7 @@ class MyChannel:
     def __init__(self, channelOrID):
         self.mafiaChannel = None
         self.mafiaChannelID = None
-        if type(channelOrID) == discord.TextChannel:
+        if type(channelOrID) == discord.TextChannel: #TODO - I think the only way MyChannel is instantiated is passing a TextChannel, check
             self.id = channelOrID.id
         else:
             self.id = channelOrID
@@ -20,6 +20,8 @@ class MyChannel:
             self.inDB = True
             self.playersIDArray = json.loads(queryRes[0][1])
             self.phase = queryRes[0][2]
+            self.mafiaChannelID = queryRes[0][3]
+            self.mafiaChannel = discord.utils.get(channelOrID.guild.channels, id=self.mafiaChannelID)
         else:
             self.playersIDArray = []
             self.phase = 0
@@ -34,11 +36,8 @@ class MyChannel:
     def saveInfo(self):
         # Channel ID | PlayersArray: []; array of IDs of players | phase
         if self.inDB:
-            if self.mafiaChannel == None:
-                mySQLTables.channelTable.updateTableWhere("phase", self.phase, "channelID", self.id)
-            else:
-                mySQLTables.channelTable.updateTableWhere("phase", self.phase, "channelID", self.id)
-                mySQLTables.channelTable.updateTableWhere("mafiaChannelID", self.mafiaChannel.id, "channelID", self.id)
+            mySQLTables.channelTable.updateTableWhere("phase", self.phase, "channelID", self.id)
+            mySQLTables.channelTable.updateTableWhere("mafiaChannelID", self.mafiaChannelID, "channelID", self.id)
         else:
             if self.mafiaChannel == None:
                 mySQLTables.channelTable.insertIntoTable(self.id, json.dumps(self.playersIDArray), self.phase, 0)
@@ -51,3 +50,12 @@ class MyChannel:
 
     def isMafiaPhase(self):
         return self.phase % 2 == 0
+    
+    async def deleteMafiaChannel(self):
+        await self.mafiaChannel.delete()
+
+    def removeDataFromDB(self):
+        mySQLTables.channelTable.deleteFromTableWhere("channelID", self.id)
+        self.inDB = False
+    
+    

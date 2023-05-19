@@ -12,7 +12,6 @@ class MafiaGame_SetUp(MafiaGame):
     def __init__(self, textChannel :discord.TextChannel, players_displayNames :tuple):
         self.players_displayNames = players_displayNames
         super().__init__(textChannel)
-        #self.setUpPlayersList(textChannel)
         self.myChannel.setPlayersIDArray(self.createIDArr(self.playersList))
         self.roleGiver = RoleGiver(len(self.playersList))
 

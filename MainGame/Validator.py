@@ -11,6 +11,7 @@ def isChannelInDB(discordTextChannel :discord.TextChannel):
     
 def isMafiaChannelInDB(potentialMafiaChannel :discord.TextChannel):
     queryRes = mySQLTables.channelTable.selectFromTableWhere("*", "mafiaChannelID", potentialMafiaChannel.id)
+    print(f"QUERY IS MAFIA CHANNEL IN DB: {queryRes}")
     return queryRes != []
 
 def getLinkedMainChannelWithMafiaChannel(mafiaChannel :discord.TextChannel) -> discord.TextChannel: 

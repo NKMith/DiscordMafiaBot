@@ -1,1 +1,1 @@
-print(f"{True}")
+print(8 % 2 == 0)
