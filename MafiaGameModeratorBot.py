@@ -79,6 +79,7 @@ async def startGame(ctx :discord.ext.commands.Context, *players_displayNames):
 async def nextRound(ctx :discord.ext.commands.Context):
     # TODO - Finish game if it hits certain phase
     # TODO - more mafias then innocents -> finish game
+    # TODO - this command during a mafia phase should be from a mafia channel
 
     channelIsAMafiaChannel = Validator.isMafiaChannelInDB(ctx.channel)
     if not Validator.isChannelInDB(ctx.channel) and not channelIsAMafiaChannel:
@@ -91,6 +92,13 @@ async def nextRound(ctx :discord.ext.commands.Context):
     else:
         game = MafiaGameMain.MafiaGame(ctx.channel)
 
+    if game.isMafiaPhase() and not channelIsAMafiaChannel: # TODO - check these somewhere else?
+        ctx.channel.send("'next' command should be called in the mafia channel when it's during a Mafia phase!")
+        return
+    elif game.isCityPhase() and channelIsAMafiaChannel:
+        ctx.channel.send("'next' command should be called in the city channel when it's during a City phase!")
+        return
+
     # time.sleep(5) # TODO - Stupid solution to playersList not being set when this func runs because of coroutines
     await game.killPlayerWithMostVotesAndAnnounce()
     game.prepForNextRound()
@@ -98,6 +106,7 @@ async def nextRound(ctx :discord.ext.commands.Context):
 
 @bot.command(name="vote")
 async def voteWhoToKill(ctx :discord.ext.commands.Context, voteeDisplayName):
+    # !!! people with weird display names: "" around their name when using the command
     channelIsAMafiaChannel = Validator.isMafiaChannelInDB(ctx.channel)
     if not Validator.isChannelInDB(ctx.channel) and not channelIsAMafiaChannel:
         await ctx.channel.send("Invalid channel for 'vote' command")

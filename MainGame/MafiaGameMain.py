@@ -34,6 +34,12 @@ class MafiaGame():
     def isInitialRound(self):
         return self.myChannel.phase == 0
     
+    def isMafiaPhase(self):
+        return self.myChannel.isMafiaPhase()
+    
+    def isCityPhase(self):
+        return not self.myChannel.isMafiaPhase()
+    
     async def createMafiaChannel(self):
         """ 
         PRE: every player already got their role
@@ -213,9 +219,9 @@ class MafiaGame():
 
     async def revivePlayer(self, player :Player):
         member = discord.utils.get(self.discordTextChannel.members, id=player.id)
-        self.unmuteMemberInChannel(member, self.discordTextChannel)
+        await self.unmuteMemberInChannel(member, self.discordTextChannel)
         if player.isMafia():
-            self.unmuteMemberInChannel(member, self.myChannel.mafiaChannel)
+            await self.unmuteMemberInChannel(member, self.myChannel.mafiaChannel)
 
     def deleteAllGameInfoFromDB(self):
         self.myChannel.removeDataFromDB()
