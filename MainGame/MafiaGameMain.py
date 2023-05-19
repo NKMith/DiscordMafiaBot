@@ -6,6 +6,7 @@ import MainGame.Table
 import MainGame.mySQLTables as mySQLTables
 import json
 import env
+import time
 
 #TODO - God class
 class MafiaGame():
@@ -24,9 +25,10 @@ class MafiaGame():
     def setUpPlayersList(self):
         """PRE: self.myChannel has playersIDArray set up"""
         self.playersList = []
-        playerIDList = self.myChannel.playersIDArray
+        playerIDList = self.myChannel.playersIDList
         for id in playerIDList:
             self.playersList.append(Player(id))
+        print(self.playersList)
 
     
     def isInitialRound(self):
@@ -61,7 +63,7 @@ class MafiaGame():
         voteePlayer = self.getPlayerWithID(voteeUser.id)
 
         if voterPlayer.hasAlreadyVoted():
-            print(f"MAFIA CHANNEL NAME: {self.myChannel.mafiaChannel.name}")
+            #print(f"MAFIA CHANNEL NAME: {self.myChannel.mafiaChannel.name}")
             msg = f"{voterUser.display_name}, you already voted!"
             if self.myChannel.isMafiaPhase(): #announcement should go to the Mafia channel if voted from there
                 await self.myChannel.mafiaChannel.send(msg)
@@ -74,11 +76,8 @@ class MafiaGame():
             return
         
     
-        
         #TODO - Mafia tries to vote in Mafia phase but in the general channel
-        
-        
-        print(f"already voted: {voterPlayer.hasAlreadyVoted()}")
+        # print(f"already voted: {voterPlayer.hasAlreadyVoted()}")
         voterPlayer.setAlreadyVoted()
         voteePlayer.incrementVoteCount()
 
@@ -105,29 +104,30 @@ class MafiaGame():
         await self.discordTextChannel.send(f"This are the votes each player got in Phase {self.myChannel.phase}:")
         for player in self.playersList:
             await self.discordTextChannel.send(f"This are the votes each player got in Phase {self.myChannel.phase}:")
-            
-
+        
 
     async def killPlayerWithMostVotesAndAnnounce(self): #TODO - players have same votes
         """
         PRE: playersList and MyChannel are set up
         Find and kill the player with most votes
         """
+
         playerToKill :Player = self.playersList[0]
         for player in self.playersList:
-            if player.voteCount <= playerToKill.voteCount:
+            player :Player = player
+            print(f"{player.id}'s vote count is {player.voteCount}")
+            if player.voteCount >= playerToKill.voteCount: #TODO - check >=
                 playerToKill = player
 
-        #self.playersList.remove(playerToKill)
-        #playerToKill.removeDataFromDB()
+        print(f"PLAYER TO KILL: {playerToKill.id}")
         await self.killPlayerAndAnnounce(playerToKill)
         
 
     async def killPlayerAndAnnounce(self, playerToKill :Player):
         userToMute = discord.utils.get(self.discordTextChannel.members, id=playerToKill.id)
-        self.muteMemberInChannel(userToMute, self.discordTextChannel)
+        await self.muteMemberInChannel(userToMute, self.discordTextChannel)
         if playerToKill.isMafia():
-            self.muteMemberInChannel(userToMute, self.myChannel.mafiaChannel)
+            await self.muteMemberInChannel(userToMute, self.myChannel.mafiaChannel)
         playerToKill.beKilled()
         await self.discordTextChannel.send(f"{userToMute.display_name} has been killed!")
         
@@ -154,8 +154,9 @@ class MafiaGame():
     def resetAllVotes(self):
         """Make everyone's voteCount 0 and reset their hasVoted boolean"""
         for player in self.playersList:
+            player :Player = player
             player.voteCount = 0
-            player.resetVoted()
+            player.resetAlreadyVoted()
 
     def save(self):
         self.saveAllPlayers()
@@ -173,12 +174,14 @@ class MafiaGame():
     async def finishGame(self):
         await self.announceWinner()
         await self.announceWhoAreTheMafias()
+        await self.reviveEveryone()
+        await self.myChannel.deleteMafiaChannel()
+
+    async def reviveEveryone(self):
         for player in self.playersList:
             player :Player = player
             if player.isKilled:
-                self.revivePlayer(player)
-
-        await self.myChannel.deleteMafiaChannel()
+                await self.revivePlayer(player)
 
     async def announceWinner(self):
         if self.isInnocentVictorious():
@@ -222,4 +225,6 @@ class MafiaGame():
         for player in self.playersList:
             player :Player = player
             player.removeDataFromDB()
+
+    
 

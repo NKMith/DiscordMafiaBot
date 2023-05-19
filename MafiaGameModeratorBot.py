@@ -8,6 +8,8 @@ import discord
 import MainGame.MafiaGameMain as MafiaGameMain
 from env import *
 import MainGame.Validator as Validator
+import time
+#from MainGame.AsyncMafiaGameConstructor import AsyncMafiaGameConstructor
 
 from discord.ext import commands #import discord
 from dotenv import load_dotenv
@@ -89,7 +91,7 @@ async def nextRound(ctx :discord.ext.commands.Context):
     else:
         game = MafiaGameMain.MafiaGame(ctx.channel)
 
-    game = MafiaGameMain.MafiaGame(ctx.channel)
+    # time.sleep(5) # TODO - Stupid solution to playersList not being set when this func runs because of coroutines
     await game.killPlayerWithMostVotesAndAnnounce()
     game.prepForNextRound()
     game.save()
@@ -120,7 +122,10 @@ async def finishGame(ctx :discord.ext.commands.Context):
     await game.finishGame()
     game.deleteAllGameInfoFromDB()
 
-    
+@bot.command(name="revive") # Command just for development
+async def reviveCommand(ctx):
+    game = MafiaGameMain.MafiaGame(ctx.channel)
+    await game.reviveEveryone()
 
 
 bot.run(BOT_TOKEN)

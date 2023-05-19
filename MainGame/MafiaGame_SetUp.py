@@ -43,7 +43,6 @@ class MafiaGame_SetUp(MafiaGame):
 
     def giveAllPlayerRoles(self):
         for player in self.playersList:
-            self.roleGiver.printInfo()
             player.getRandomRole(self.roleGiver)
         print("Gave every player a role")
 

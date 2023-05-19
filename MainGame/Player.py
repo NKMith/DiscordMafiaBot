@@ -54,7 +54,7 @@ class Player():
 
     def incrementVoteCount(self):
         self.voteCount += 1
-        print(f"{self.id} was voted")
+        print(f"{self.id} was voted; new vote count is {self.voteCount}")
         
     def removeDataFromDB(self): #TODO
         """
