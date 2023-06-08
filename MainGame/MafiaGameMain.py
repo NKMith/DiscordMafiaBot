@@ -8,6 +8,9 @@ import json
 import env
 import time
 
+class PlayerIsNone(Exception):
+    pass
+
 #TODO - God class
 class MafiaGame():
     def __init__(self, textChannel :discord.TextChannel):
@@ -48,7 +51,6 @@ class MafiaGame():
         guild = self.discordTextChannel.guild
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            guild.me: discord.PermissionOverwrite(read_messages=True) # TODO - Delete this
         }
 
         # give access to channel to each mafia
@@ -68,6 +70,9 @@ class MafiaGame():
         voterPlayer = self.getPlayerWithID(voterUser.id)
         voteePlayer = self.getPlayerWithID(voteeUser.id)
 
+        if voterPlayer == None or voteePlayer == None:
+            raise PlayerIsNone
+
         if voterPlayer.hasAlreadyVoted():
             #print(f"MAFIA CHANNEL NAME: {self.myChannel.mafiaChannel.name}")
             msg = f"{voterUser.display_name}, you already voted!"
@@ -80,10 +85,8 @@ class MafiaGame():
         if self.myChannel.isMafiaPhase() and voterPlayer.isInnocent(): 
             await self.discordTextChannel.send("You aren't allowed to vote during this phase!")
             return
-        
     
         #TODO - Mafia tries to vote in Mafia phase but in the general channel
-        # print(f"already voted: {voterPlayer.hasAlreadyVoted()}")
         voterPlayer.setAlreadyVoted()
         voteePlayer.incrementVoteCount()
 
@@ -92,41 +95,34 @@ class MafiaGame():
             if player.id == id:
                 return player
 
-    
-    def votePlayerWithID(self, voterID, voteeID): #TODO - Unused
-        """Find players using IDs, set voter's voteBool true and increment votee's vote count"""
-        votee :Player = None
-        voter :Player = None
-        for player in self.playersList:
-            if player.id == voterID:
-                voter == player
-            elif player.id == voteeID:
-                votee == player
-
-        voter.setAlreadyVoted()
-        votee.incrementVoteCount()
-
     async def announcePlayerVoteCounts(self):
         await self.discordTextChannel.send(f"This are the votes each player got in Phase {self.myChannel.phase}:")
         for player in self.playersList:
-            await self.discordTextChannel.send(f"This are the votes each player got in Phase {self.myChannel.phase}:")
+            player :Player = player
+            member = discord.utils.get(self.discordTextChannel.members, id=player.id)
+            await self.discordTextChannel.send(f"{member.display_name}: {player.voteCount}")
         
 
-    async def killPlayerWithMostVotesAndAnnounce(self): #TODO - players have same votes
+    async def killPlayerWithMostVotesAndAnnounce(self):
         """
         PRE: playersList and MyChannel are set up
-        Find and kill the player with most votes
+        Find and kill the player with most votes; if no one was voted, it kills no one
+        If there are multiple players who have the same vote count, whoever is near the end of the playersList is killed
         """
 
         playerToKill :Player = self.playersList[0]
         for player in self.playersList:
             player :Player = player
             print(f"{player.id}'s vote count is {player.voteCount}")
-            if player.voteCount >= playerToKill.voteCount: #TODO - check >=
+            if player.voteCount >= playerToKill.voteCount and player.isAlive():
                 playerToKill = player
 
         print(f"PLAYER TO KILL: {playerToKill.id}")
-        await self.killPlayerAndAnnounce(playerToKill)
+
+        if playerToKill.voteCount == 0:
+            await self.discordTextChannel.send("No one has been voted, therefore everyone lives!")
+        else:
+            await self.killPlayerAndAnnounce(playerToKill)
         
 
     async def killPlayerAndAnnounce(self, playerToKill :Player):
@@ -177,11 +173,17 @@ class MafiaGame():
         for player in self.playersList:
             print(player.id)
 
+    async def finishGameAndDeleteData(self):
+        await self.finishGame()
+        self.deleteAllGameInfoFromDB()
+
     async def finishGame(self):
+        """ Does not delete data from DB """
         await self.announceWinner()
         await self.announceWhoAreTheMafias()
         await self.reviveEveryone()
         await self.myChannel.deleteMafiaChannel()
+       
 
     async def reviveEveryone(self):
         for player in self.playersList:
@@ -190,10 +192,10 @@ class MafiaGame():
                 await self.revivePlayer(player)
 
     async def announceWinner(self):
-        if self.isInnocentVictorious():
-            await self.discordTextChannel.send("Innocents are the winners!")
-        else:
+        if self.areThereMoreMafiasLeftThanInnocents():
             await self.discordTextChannel.send("Mafias are the winners!")
+        else:
+            await self.discordTextChannel.send("Innocents are the winners!")
 
     async def announceWhoAreTheMafias(self):
         await self.discordTextChannel.send("These people are the mafias: ")
@@ -202,20 +204,6 @@ class MafiaGame():
             if player.isMafia():
                 member = discord.utils.get(self.discordTextChannel.members, id=player.id)
                 await self.discordTextChannel.send(f"{member.display_name}")
-        
-
-    def isInnocentVictorious(self):
-        innocentCount = 0
-        mafiaCount = 0
-        for player in self.playersList:
-            player :Player = player
-            if player.isAlive():
-                if player.isMafia():
-                    mafiaCount += 1
-                else:
-                    innocentCount += 1
-
-        return innocentCount > mafiaCount # TODO - innocent == mafia -> mafia wins
 
     async def revivePlayer(self, player :Player):
         member = discord.utils.get(self.discordTextChannel.members, id=player.id)
@@ -231,6 +219,39 @@ class MafiaGame():
         for player in self.playersList:
             player :Player = player
             player.removeDataFromDB()
+
+
+    def isLastRound(self):
+        return self.myChannel.phase == env.LASTPHASENUM
+    
+    def areThereMoreMafiasLeftThanInnocents(self):
+        mafiaCount = 0
+        innocentCount = 0
+        for player in self.playersList:
+            player :Player = player 
+
+            if player.isAlive():
+                if player.isMafia():
+                    mafiaCount += 1
+                elif player.isInnocent():
+                    innocentCount += 1
+
+        return mafiaCount >= innocentCount
+
+
+    
+    def shouldGameEnd(self):
+        return self.myChannel.phase > env.LASTPHASENUM or self.areThereMoreMafiasLeftThanInnocents()
+    
+    async def announceLastRound(self) -> None:
+        await self.discordTextChannel.send("This is the last round!")
+
+    async def announceWhichTeamWillStartVoting(self):
+        if self.isCityPhase():
+            await self.discordTextChannel.send("It is the citizens' time to vote")
+        elif self.isMafiaPhase():
+            await self.discordTextChannel.send("It is the mafias' time to vote")
+            await self.myChannel.mafiaChannel.send("It is the mafias' time to vote")
 
     
 

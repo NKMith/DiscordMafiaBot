@@ -6,7 +6,7 @@ from MainGame.MafiaGameMain import MafiaGame
 import discord
 import json
 import MainGame.mySQLTables as mySQLTables
-
+import MainGame.Validator as Validator
 
 class MafiaGame_SetUp(MafiaGame):
     def __init__(self, textChannel :discord.TextChannel, players_displayNames :tuple):
@@ -14,6 +14,8 @@ class MafiaGame_SetUp(MafiaGame):
         super().__init__(textChannel)
         self.myChannel.setPlayersIDArray(self.createIDArr(self.playersList))
         self.roleGiver = RoleGiver(len(self.playersList))
+
+        self.unaddedMembersDisplayNames = []
 
     def createIDArr(self, iterable): #iterable elements must have field id
         retArr = []
@@ -29,17 +31,37 @@ class MafiaGame_SetUp(MafiaGame):
         self.playersList = []
         # if not specifically mentioned, add all the non-bot members
         # TODO - handle cases where there are different users with duplicate names
+        # TODO - check if player is in multiple games
         if self.players_displayNames == ():
             for member in self.discordTextChannel.members:
-                if not member.bot:
-                    newPlayer = Player(member)
-                    self.playersList.append(newPlayer)
+                self.addMemberToPlayersListAsPlayer(member)
         else:
             for displayName in self.players_displayNames:
                 member = discord.utils.get(self.discordTextChannel.members, display_name=displayName)
-                if member != None and not member.bot:
-                    newPlayer = Player(member)
-                    self.playersList.append(newPlayer)
+                self.addMemberToPlayersListAsPlayer(member)
+    
+    def addMemberToPlayersListAsPlayer(self, member :discord.Member):
+        """ Will not announce which players weren't added because of async (call separate func manually) """
+        if member == None:
+            return
+
+        if Validator.isPlayerOrMemberInDB(member):
+            self.unaddedMembersDisplayNames.append(member.display_name)
+            return
+
+        if not member.bot:
+            newPlayer = Player(member)
+            self.playersList.append(newPlayer)
+
+    async def announceWhichPlayersWerentAdded(self):
+        if self.unaddedMembersDisplayNames == []:
+            return
+        announceStr = ""
+        for displayName in self.unaddedMembersDisplayNames:
+            announceStr += f"{displayName}\n"
+        await self.discordTextChannel.send(f"These people weren't added because they already are in a game: \n{announceStr}")
+        
+    
 
     def giveAllPlayerRoles(self):
         for player in self.playersList:

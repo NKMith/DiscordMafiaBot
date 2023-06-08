@@ -1,6 +1,6 @@
 """ 
 Author: NKMith
-Discord Mafia Bot v.0.1: A game running on Discord
+Discord Mafia Bot v.0.8: A game running on Discord
 
 """
 import MainGame.MafiaGame_SetUp as MafiaGame_SetUp
@@ -61,10 +61,11 @@ async def startGame(ctx :discord.ext.commands.Context, *players_displayNames):
     # Game starts with phase 0, where Mafias get to vote who to kill
     # TODO - MyChannel with same ID shouldn't be existing when this command is called
     if Validator.isChannelInDB(ctx.channel) or Validator.isMafiaChannelInDB(ctx.channel):
-        ctx.channel.send("You already have a game ongoing related to this channel!")
+        await ctx.channel.send("You already have a game ongoing related to this channel!")
         return
     
     game = MafiaGame_SetUp.MafiaGame_SetUp(ctx.channel, players_displayNames)
+    await game.announceWhichPlayersWerentAdded()
     game.giveAllPlayerRoles()
     game.printAllPlayers()
     # await game.notifyAllPlayersAboutRole()
@@ -73,35 +74,56 @@ async def startGame(ctx :discord.ext.commands.Context, *players_displayNames):
     game = MafiaGameMain.MafiaGame(ctx.channel)
     await game.createMafiaChannel()
     game.save()
+    await game.announceWhichTeamWillStartVoting()
 
+@bot.command(name="finish")
+async def finishGame(ctx :discord.ext.commands.Context):
+    if not Validator.isChannelInDB(ctx.channel):
+        await ctx.channel.send("Invalid channel for 'finish' command")
+        return
+    
+
+    await ctx.channel.send("The game is finished!")
+    game = MafiaGameMain.MafiaGame(ctx.channel)
+    await game.finishGameAndDeleteData()
 
 @bot.command(name="next")
 async def nextRound(ctx :discord.ext.commands.Context):
-    # TODO - Finish game if it hits certain phase
-    # TODO - more mafias then innocents -> finish game
-    # TODO - this command during a mafia phase should be from a mafia channel
-
     channelIsAMafiaChannel = Validator.isMafiaChannelInDB(ctx.channel)
+
+    # if it's a channel not related to any game
     if not Validator.isChannelInDB(ctx.channel) and not channelIsAMafiaChannel:
-        ctx.channel.send("Invalid channel for 'next' command")
+        await ctx.channel.send("Invalid channel for 'next' command")
         return
     
+    # get game object
     if channelIsAMafiaChannel:
         mainChannel = Validator.getLinkedMainChannelWithMafiaChannel(ctx.channel)
         game = MafiaGameMain.MafiaGame(mainChannel)
     else:
         game = MafiaGameMain.MafiaGame(ctx.channel)
 
+
     if game.isMafiaPhase() and not channelIsAMafiaChannel: # TODO - check these somewhere else?
-        ctx.channel.send("'next' command should be called in the mafia channel when it's during a Mafia phase!")
+        await ctx.channel.send("'next' command should be called in the mafia channel when it's during a Mafia phase!")
         return
     elif game.isCityPhase() and channelIsAMafiaChannel:
-        ctx.channel.send("'next' command should be called in the city channel when it's during a City phase!")
+        await ctx.channel.send("'next' command should be called in the city channel when it's during a City phase!")
         return
+    
+    if game.isLastRound():
+        await game.announceLastRound()
 
-    # time.sleep(5) # TODO - Stupid solution to playersList not being set when this func runs because of coroutines
     await game.killPlayerWithMostVotesAndAnnounce()
+    await game.announcePlayerVoteCounts()
+
+    if game.shouldGameEnd():
+        await game.finishGameAndDeleteData()
+        return
+    
+
     game.prepForNextRound()
+    await game.announceWhichTeamWillStartVoting()
     game.save()
 
 @bot.command(name="vote")
@@ -119,22 +141,22 @@ async def voteWhoToKill(ctx :discord.ext.commands.Context, voteeDisplayName):
         game = MafiaGameMain.MafiaGame(ctx.channel)
 
     await game.votePlayerIfValid(ctx.author, voteeDisplayName)
-    game.save() #TODO - maybe just save the related players instead of saving the whole game?
+    game.save()
 
-
-@bot.command(name="finish")
-async def finishGame(ctx :discord.ext.commands.Context):
-    if not Validator.isChannelInDB(ctx.channel):
-        ctx.channel.send("Invalid channel for 'finish' command")
-        return
-    game = MafiaGameMain.MafiaGame(ctx.channel)
-    await game.finishGame()
-    game.deleteAllGameInfoFromDB()
 
 @bot.command(name="revive") # Command just for development
 async def reviveCommand(ctx):
     game = MafiaGameMain.MafiaGame(ctx.channel)
     await game.reviveEveryone()
+
+@bot.command(name="deleteAllMafiaRooms") # Command just for development
+async def deleteAllMafiaRooms(ctx :discord.ext.commands.Context):
+    if ctx.author.id != GOD_ID:
+        return
+    mafiaChannel :discord.TextChannel = discord.utils.get(ctx.guild.channels, name="mafiaroom")
+    while mafiaChannel != None:
+        await mafiaChannel.delete()
+        mafiaChannel :discord.TextChannel = discord.utils.get(ctx.guild.channels, name="mafiaroom")
 
 
 bot.run(BOT_TOKEN)

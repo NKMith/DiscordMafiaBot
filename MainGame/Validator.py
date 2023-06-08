@@ -19,3 +19,16 @@ def getLinkedMainChannelWithMafiaChannel(mafiaChannel :discord.TextChannel) -> d
     queryRes = mySQLTables.channelTable.selectFromTableWhere("*", "mafiaChannelID", mafiaChannel.id)
     mainChannelID = queryRes[0][0]
     return discord.utils.get(mafiaChannel.guild.channels, id=mainChannelID)
+
+def isPlayerOrMemberInDB(playerOrMember):
+    queryRes = mySQLTables.playersTable.selectFromTableWhere("*", "playerID", playerOrMember.id)
+    return queryRes != []
+
+def isAnyMemberInDB(displayNameTuple, textChannel: discord.TextChannel):
+    for name in displayNameTuple:
+        member = discord.utils.get(textChannel.members, displayname=name)
+        if isPlayerOrMemberInDB(member):
+            return True
+    
+    return False
+
