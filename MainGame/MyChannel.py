@@ -9,7 +9,7 @@ class MyChannel:
     def __init__(self, channelOrID):
         self.mafiaChannel = None
         self.mafiaChannelID = None
-        if type(channelOrID) == discord.TextChannel: #TODO - I think the only way MyChannel is instantiated is passing a TextChannel, check
+        if type(channelOrID) == discord.TextChannel:
             self.id = channelOrID.id
         else:
             self.id = channelOrID

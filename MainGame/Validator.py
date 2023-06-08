@@ -32,3 +32,17 @@ def isAnyMemberInDB(displayNameTuple, textChannel: discord.TextChannel):
     
     return False
 
+
+def createDisplayNamesList(listOfObjsWithAttDisplayName):
+    lstToRet = []
+    for objWithAttDisplayName in listOfObjsWithAttDisplayName:
+        lstToRet.append(objWithAttDisplayName.display_name)
+    return lstToRet
+
+def areThereAnyDuplicateMemberInTextChannel(tc: discord.TextChannel):
+    #TODO - relocate this function to a different module?
+    displayNamesList = createDisplayNamesList(tc.members)
+    return len(displayNamesList) != len(set(displayNamesList))
+
+
+

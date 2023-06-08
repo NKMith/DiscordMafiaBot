@@ -45,8 +45,6 @@ class Player():
     def hasAlreadyVoted(self):
         return self.alreadyVoted
     
-    # Bug: player in two different games
-    # TODO - cant send messages to some players
     async def notifyPlayerOfRole(self):
         await self.user.create_dm()
         print(f"SENDING MESSAGE TO {self.user.display_name}")
@@ -56,7 +54,7 @@ class Player():
         self.voteCount += 1
         print(f"{self.id} was voted; new vote count is {self.voteCount}")
         
-    def removeDataFromDB(self): #TODO
+    def removeDataFromDB(self):
         """
         Remove own data from DB
         """
@@ -65,7 +63,6 @@ class Player():
 
     def saveInfo(self):
         print("save player information: " + str(self.id))
-        # TODO - Try read info from table; if null, then insert; else, update
         if self.inDB:
             print("PLAYER: UPDATING TABLE")
             mySQLTables.playersTable.updateTableWhere("voteCount", self.voteCount, "playerID", self.id)

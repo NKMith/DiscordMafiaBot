@@ -59,12 +59,16 @@ Set up and start the Mafia game
 @bot.command(name="start")
 async def startGame(ctx :discord.ext.commands.Context, *players_displayNames):
     # Game starts with phase 0, where Mafias get to vote who to kill
-    # TODO - MyChannel with same ID shouldn't be existing when this command is called
     if Validator.isChannelInDB(ctx.channel) or Validator.isMafiaChannelInDB(ctx.channel):
         await ctx.channel.send("You already have a game ongoing related to this channel!")
         return
     
+    if Validator.areThereAnyDuplicateMemberInTextChannel(ctx.channel):
+        await ctx.channel.send("There are users in this channel with same display names...For now, this is not allowed.")
+        return
+
     game = MafiaGame_SetUp.MafiaGame_SetUp(ctx.channel, players_displayNames)
+
     await game.announceWhichPlayersWerentAdded()
     game.giveAllPlayerRoles()
     game.printAllPlayers()
@@ -104,7 +108,7 @@ async def nextRound(ctx :discord.ext.commands.Context):
         game = MafiaGameMain.MafiaGame(ctx.channel)
 
 
-    if game.isMafiaPhase() and not channelIsAMafiaChannel: # TODO - check these somewhere else?
+    if game.isMafiaPhase() and not channelIsAMafiaChannel:
         await ctx.channel.send("'next' command should be called in the mafia channel when it's during a Mafia phase!")
         return
     elif game.isCityPhase() and channelIsAMafiaChannel:

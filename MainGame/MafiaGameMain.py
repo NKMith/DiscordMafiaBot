@@ -198,12 +198,15 @@ class MafiaGame():
             await self.discordTextChannel.send("Innocents are the winners!")
 
     async def announceWhoAreTheMafias(self):
-        await self.discordTextChannel.send("These people are the mafias: ")
+        announceStr = "These people are the mafias: "
         for player in self.playersList:
             player :Player = player
             if player.isMafia():
                 member = discord.utils.get(self.discordTextChannel.members, id=player.id)
-                await self.discordTextChannel.send(f"{member.display_name}")
+                announceStr += member.display_name
+
+        await self.discordTextChannel.send(announceStr)
+        
 
     async def revivePlayer(self, player :Player):
         member = discord.utils.get(self.discordTextChannel.members, id=player.id)
