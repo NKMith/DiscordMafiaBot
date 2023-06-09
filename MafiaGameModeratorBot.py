@@ -1,6 +1,6 @@
 """ 
 Author: NKMith
-Discord Mafia Bot v.0.8: A game running on Discord
+Discord Mafia Bot v.0.8: Runs a mafia game in Discord
 
 """
 import MainGame.MafiaGame_SetUp as MafiaGame_SetUp

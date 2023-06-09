@@ -1,9 +1,10 @@
+""" 
+Module with helper functions for the bot to use to check whether certain conditions are met before processing a command
+
+"""
+
 import discord
 import MainGame.mySQLTables as mySQLTables
-
-""" class Validator():
-    def __init__():
-        pass """
 
 def isChannelInDB(discordTextChannel :discord.TextChannel):
     queryRes = mySQLTables.channelTable.selectFromTableWhere("*", "channelID", discordTextChannel.id)
@@ -33,7 +34,8 @@ def isAnyMemberInDB(displayNameTuple, textChannel: discord.TextChannel):
     return False
 
 
-def createDisplayNamesList(listOfObjsWithAttDisplayName):
+def createDisplayNamesList(
+    listOfObjsWithAttDisplayName):
     lstToRet = []
     for objWithAttDisplayName in listOfObjsWithAttDisplayName:
         lstToRet.append(objWithAttDisplayName.display_name)

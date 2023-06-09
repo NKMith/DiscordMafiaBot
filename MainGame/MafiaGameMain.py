@@ -1,3 +1,10 @@
+""" 
+Module with the main MafiaGame object that has most functionalities in the game
+
+
+"""
+
+
 from MainGame.Player import Player
 from MainGame.RoleGiver import RoleGiver
 from MainGame.MyChannel import MyChannel
@@ -8,8 +15,7 @@ import json
 import env
 import time
 
-class PlayerIsNone(Exception):
-    pass
+
 
 #TODO - God class
 class MafiaGame():
@@ -69,9 +75,6 @@ class MafiaGame():
         voteeUser :discord.member.Member = discord.utils.get(self.discordTextChannel.members, display_name=voteeDisplayName)
         voterPlayer = self.getPlayerWithID(voterUser.id)
         voteePlayer = self.getPlayerWithID(voteeUser.id)
-
-        if voterPlayer == None or voteePlayer == None:
-            raise PlayerIsNone
 
         if voterPlayer.hasAlreadyVoted():
             #print(f"MAFIA CHANNEL NAME: {self.myChannel.mafiaChannel.name}")

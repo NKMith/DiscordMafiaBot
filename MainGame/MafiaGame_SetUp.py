@@ -1,10 +1,12 @@
+""" 
+A child of main Mafia Game object for setting up a new game
+
+"""
 
 from MainGame.Player import Player
 from MainGame.RoleGiver import RoleGiver
-from MainGame.MyChannel import MyChannel
 from MainGame.MafiaGameMain import MafiaGame
 import discord
-import json
 import MainGame.mySQLTables as mySQLTables
 import MainGame.Validator as Validator
 

@@ -1,10 +1,11 @@
+""" 
+Object that represents a playerthat's saved in DB
+"""
 import discord
-import MainGame.Table
 import MainGame.mySQLTables as mySQLTables
-import json
 from MainGame.RoleGiver import RoleGiver
-class Player():
-    
+
+class Player(): #TODO - maybe add a display name field?
     def __init__(self, memberOrID):
         
         if type(memberOrID) == discord.member.Member:

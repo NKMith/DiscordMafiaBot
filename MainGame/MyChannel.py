@@ -1,3 +1,7 @@
+""" 
+Object that represents a channel that's saved in DB
+"""
+
 import discord
 import MainGame.Table as Table
 import MainGame.mySQLTables as mySQLTables
