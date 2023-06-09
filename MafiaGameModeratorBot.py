@@ -9,10 +9,7 @@ import MainGame.MafiaGameMain as MafiaGameMain
 from env import *
 import MainGame.Validator as Validator
 import time
-#from MainGame.AsyncMafiaGameConstructor import AsyncMafiaGameConstructor
-
-from discord.ext import commands #import discord
-from dotenv import load_dotenv
+from discord.ext import commands
 myIntents = discord.Intents.all()
 bot = commands.Bot(intents = myIntents, command_prefix=['!'])
 
@@ -45,7 +42,6 @@ async def on_message(message :discord.Message):
     await bot.process_commands(message) #only needed in on_message
 
 
-# ctx == class discord.ext.commands.Context ; Represents the context in which a command is being invoked under.
 @bot.command(name="pretend_bot", help="<guildName> <channelName> <messageContent>")
 async def pretend_bot(ctx, guildName, channelName, messageContent):
     if is_user_god(ctx.author) and type(ctx.channel) == discord.DMChannel:
