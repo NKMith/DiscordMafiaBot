@@ -8,6 +8,16 @@ I will allow distribution and any changes if you adhere to these conditions:
 2. You may not modify the project in a way that can potentially harm someone in any sort of way (I'm most concerned with privacy breach)
 3. Please credit me (NKMith) as one of the authors or as the "original author"
 
+## Implementation notes
+- Discord bots cannot save data, therefore datas about players and channels are being saved on a MYSQL server.
+
+- There is a file named env.py that is not on this repository due to privacy. This file currently has global variables:
+    - GOD_ID : Discord user ID of the developer
+    - HOST :  name of the server host
+    - USER : name of the server user
+    - PASSWORD : password of the server
+    - LASTPHASENUM : number of the last phase of the game
+
 
 ## Description
 This project is a Discord Bot that allows players to play the popular Mafia Game in a Discord server. When the game starts, each player will get a role as either an Innocent or a Mafia. Around 1/4 of the players will be Mafias. Mafias will be added to a new private channel.
