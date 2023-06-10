@@ -11,7 +11,7 @@ I will allow distribution and any changes if you adhere to these conditions:
 ## Implementation notes
 - Discord bots cannot save data, therefore datas about players and channels are being saved on a MYSQL server.
 
-- There is a file named env.py that is not on this repository due to privacy. This file currently has global variables:
+- There is a file named env.py that is not on this repository due to privacy. This file currently has these global variables:
     - GOD_ID : Discord user ID of the developer
     - HOST :  name of the server host
     - USER : name of the server user

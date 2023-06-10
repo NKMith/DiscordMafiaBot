@@ -1,10 +1,6 @@
 """ 
 Module with the main MafiaGame object that has most functionalities in the game
-
-
 """
-
-
 from MainGame.Player import Player
 from MainGame.RoleGiver import RoleGiver
 from MainGame.MyChannel import MyChannel
@@ -116,6 +112,11 @@ class MafiaGame_DB(MafiaGame_Small):
 class MafiaGame_Voting(MafiaGame_DB):
     async def votePlayerIfValid(self, voterUser :discord.member.Member, voteeDisplayName):
         voteeUser :discord.member.Member = discord.utils.get(self.discordTextChannel.members, display_name=voteeDisplayName)
+
+        if voteeUser == None:
+            await self.discordTextChannel.send(f"There is no player called {voteeDisplayName}!")
+            return
+
         voterPlayer = self.getPlayerWithID(voterUser.id)
         voteePlayer = self.getPlayerWithID(voteeUser.id)
 
